@@ -1,10 +1,13 @@
 from pathlib import Path
+import os
+import secrets
 import numpy as np
 import onnxruntime as ort
-from fastapi import FastAPI
+from fastapi import FastAPI, Header, HTTPException
 from pydantic import BaseModel
 
 RUTA_MODELO = Path(__file__).resolve().parent / "modelo_pib.onnx"
+CLAVE_API = os.environ.get("API_KEY", "")
 
 sesion = ort.InferenceSession(str(RUTA_MODELO))
 NOMBRE_ENTRADA = sesion.get_inputs()[0].name
@@ -29,7 +32,10 @@ def estado():
 
 
 @app.post("/predecir")
-def predecir(datos: Variables):
+def predecir(datos: Variables, x_api_key: str = Header(default="")):
+    if CLAVE_API == "" or not secrets.compare_digest(x_api_key, CLAVE_API):
+        raise HTTPException(status_code=401, detail="Clave de API invalida o ausente")
+
     entrada = np.array([[datos.x1, datos.x2, datos.x3, datos.x4,
                          datos.x5, datos.x6, datos.x7, datos.x8]], dtype="float32")
     prediccion = sesion.run(None, {NOMBRE_ENTRADA: entrada})[0]
