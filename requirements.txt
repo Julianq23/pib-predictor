@@ -1,0 +1,10 @@
+pandas
+numpy
+xlrd
+scikit-learn
+tensorflow
+fastapi
+uvicorn
+tf2onnx
+onnx
+onnxruntime
